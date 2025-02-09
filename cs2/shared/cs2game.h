@@ -6,46 +6,48 @@ extern "C" int _fltused;
 #endif
 
 #include "cs2.h"
+#include <cstdint>
+#include <memory>
 
-//
-// features.cpp
-//
-namespace cs2
-{
-	namespace features
-	{
-		void run(void);
-		void reset(void);
-	}
+namespace cs2::features {
+    void run();
+    void reset();
 }
 
-//
-// implemented by application/driver
-//
-namespace client
-{
-	extern void mouse_move(int x, int y);
-	extern void mouse1_down(void);
-	extern void mouse1_up(void);
-	extern void DrawRect(void *hwnd, int x, int y, int w, int h, unsigned char r, unsigned char g, unsigned char b);
-	extern void DrawFillRect(void *hwnd, int x, int y, int w, int h, unsigned char r, unsigned char g, unsigned char b);
+// Modern interface for client implementations
+namespace client {
+    // Mouse control interface
+    struct MouseController {
+        virtual void move(int32_t x, int32_t y) = 0;
+        virtual void button1_down() = 0;
+        virtual void button1_up() = 0;
+        virtual ~MouseController() = default;
+    };
+
+    // Drawing interface
+    struct Renderer {
+        struct Color {
+            uint8_t r, g, b, a;
+        };
+
+        virtual void drawRect(void* hwnd, int32_t x, int32_t y, int32_t w, int32_t h, Color color) = 0;
+        virtual void drawFilledRect(void* hwnd, int32_t x, int32_t y, int32_t w, int32_t h, Color color) = 0;
+        virtual ~Renderer() = default;
+    };
+
+    // Global interface accessors
+    extern std::shared_ptr<MouseController> getMouseController();
+    extern std::shared_ptr<Renderer> getRenderer();
 }
 
-namespace cs2
-{
-	inline void run(void)
-	{
-		if (cs2::running())
-		{
-			features::run();
-		}
-		else
-		{
-			features::reset();
-		}
-	}
+namespace cs2 {
+    inline void run() {
+        if (cs2::running()) {
+            features::run();
+        } else {
+            features::reset();
+        }
+    }
 }
-
 
 #endif // CS2GAME_H
-
